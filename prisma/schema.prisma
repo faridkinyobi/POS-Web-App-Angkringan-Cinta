@@ -1,0 +1,383 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum role {
+  ADMIN
+  OWNER
+  KARSIR
+  MITRA
+  KURIR
+}
+
+model User {
+  id                  String                @id @default(uuid())
+  name                String                @db.VarChar(100)
+  email               String                @unique @db.VarChar(150)
+  role                role
+  password            String
+  createdAt           DateTime              @default(now())
+  updatedAt           DateTime              @updatedAt
+  Karyawan            Karyawan[]            @relation("KaryawanUser")
+  createdKaryawan     Karyawan[]            @relation("KaryawanCreatedBy")
+  PermintaanInventory PermintaanInventory[]
+  PengirimanBarang    PengirimanBarang[]
+  MitraBelanja        MitraBelanja[]
+  sessions            Session[]
+}
+
+model Session {
+  id        String   @id @default(uuid())
+  token     String   @unique
+  userId    String
+  isRevoked Boolean  @default(false)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+// KARYAWAN
+enum gender {
+  laki_laki
+  perempuan
+}
+
+model Karyawan {
+  id             String           @id @default(uuid())
+  name           String           @db.VarChar(100)
+  umur           Int
+  alamat         String           @db.VarChar(255)
+  gender         gender
+  user_id        String
+  creat_by_id    String
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+  user           User             @relation("KaryawanUser", fields: [user_id], references: [id], onDelete: Cascade)
+  createdBy      User             @relation("KaryawanCreatedBy", fields: [creat_by_id], references: [id], onDelete: Cascade)
+  Jadwalkaryawan Jadwalkaryawan[]
+  Galery         Galery[]
+  PenjualanMenu  PenjualanMenu[]
+}
+
+enum shift {
+  pagi
+  siang
+}
+
+model Jadwal {
+  id           String   @id @default(uuid())
+  namaKaryawan String   @db.VarChar(100)
+  tanggal      DateTime
+  shift_masuk  shift
+  outlite_id   String
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  outlite        Outlite          @relation(fields: [outlite_id], references: [id], onDelete: Cascade)
+  Jadwalkaryawan Jadwalkaryawan[] //maksimal 2 orang
+}
+
+model Jadwalkaryawan {
+  id          String   @id @default(uuid())
+  jadwal_id   String
+  karyawan_id String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  jadwal   Jadwal   @relation(fields: [jadwal_id], references: [id], onDelete: Cascade)
+  karyawan Karyawan @relation(fields: [karyawan_id], references: [id], onDelete: Cascade)
+
+  @@unique([jadwal_id, karyawan_id])
+  @@map("jadwal_karyawan")
+}
+
+enum file_type {
+  jpg
+  png
+  svg
+  jpeg
+  webp
+}
+
+// GALERY
+model Galery {
+  id          String    @id @default(uuid())
+  name_file   String    @db.VarChar(100)
+  url         String    @db.VarChar(255)
+  type        file_type // jpg,png,svg,webp
+  karyawan_id String
+  menu_id     String
+  keuangan_id String
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  karyawan    Karyawan  @relation(fields: [karyawan_id], references: [id], onDelete: Cascade)
+  menu        Menu      @relation(fields: [menu_id], references: [id], onDelete: Cascade)
+  keuangan    Keuangan  @relation(fields: [keuangan_id], references: [id], onDelete: Cascade)
+}
+
+model Menu {
+  id                  String                @id @default(uuid())
+  name                String                @db.VarChar(100)
+  harga               Decimal               @db.Decimal(10, 2)
+  createdAt           DateTime              @default(now())
+  updatedAt           DateTime              @updatedAt
+  Galery              Galery[]
+  PenjualanMenuDetail PenjualanMenuDetail[]
+  Diskon              Diskon[]
+}
+
+model PenjualanMenu {
+  id          String   @id @default(uuid())
+  grand_total Decimal  @db.Decimal(10, 2)
+  note        String   @db.VarChar(255)
+  karyawan_id String
+  outlite_id  String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  karyawan            Karyawan              @relation(fields: [karyawan_id], references: [id], onDelete: Cascade)
+  outlite             Outlite               @relation(fields: [outlite_id], references: [id], onDelete: Cascade)
+  PenjualanMenuDetail PenjualanMenuDetail[]
+
+  @@map("penjualan_menu")
+}
+
+model PenjualanMenuDetail {
+  id                String        @id @default(uuid())
+  qty               Int
+  harga             Decimal       @db.Decimal(10, 2)
+  Subtotal          Decimal       @db.Decimal(10, 2)
+  menu_id           String
+  penjualan_menu_id String
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
+  menu              Menu          @relation(fields: [menu_id], references: [id], onDelete: Cascade)
+  penjualan_menu    PenjualanMenu @relation(fields: [penjualan_menu_id], references: [id], onDelete: Cascade)
+
+  @@map("penjualan_menu_detail")
+}
+
+model Outlite {
+  id                  String                @id @default(uuid())
+  name                String                @db.VarChar(100)
+  alamat              String                @db.VarChar(255)
+  status              Boolean // buka tutup
+  createdAt           DateTime              @default(now())
+  updatedAt           DateTime              @updatedAt
+  Jadwal              Jadwal[]
+  PenjualanMenu       PenjualanMenu[]
+  InventoryOutlite    InventoryOutlite[]
+  PermintaanInventory PermintaanInventory[]
+  PengirimanBarang    PengirimanBarang[]
+}
+
+model MasterInventory {
+  id                        String                      @id @default(uuid())
+  name                      String                      @db.VarChar(100)
+  stock                     Int
+  satuan                    String                      @db.VarChar(100)
+  katagory                  String                      @db.VarChar(100)
+  harga_beli                Decimal                     @db.Decimal(10, 2)
+  harga_jual                Decimal                     @db.Decimal(10, 2)
+  createdAt                 DateTime                    @default(now())
+  updatedAt                 DateTime                    @updatedAt
+  InventoryOutlite          InventoryOutlite[]
+  PermintaanInventoryDetail PermintaanInventoryDetail[]
+  DetailMitraBelanja        DetailMitraBelanja[]
+
+  @@map("master_inventory")
+}
+
+model InventoryOutlite {
+  id                   String   @id @default(uuid())
+  satuan               String   @db.VarChar(100)
+  stock                Int
+  outlite_id           String
+  master_inventaris_id String
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+
+  oulite            Outlite         @relation(fields: [outlite_id], references: [id], onDelete: Cascade)
+  master_inventaris MasterInventory @relation(fields: [master_inventaris_id], references: [id], onDelete: Cascade)
+
+  @@map("inventory_outlite")
+}
+
+model PermintaanInventory {
+  id          String   @id @default(uuid())
+  jumlah_item Int
+  status      String   @db.VarChar(50) // pending, approved, rejected,processed,sukses
+  note        String   @db.VarChar(255)
+  outlite_id  String
+  dibuat_oleh String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  outlite                   Outlite                     @relation(fields: [outlite_id], references: [id], onDelete: Cascade)
+  DibuatOleh                User                        @relation(fields: [dibuat_oleh], references: [id], onDelete: Cascade)
+  PermintaanInventoryDetail PermintaanInventoryDetail[]
+  PengirimanBarang          PengirimanBarang[]
+
+  @@map("permintaan_inventory")
+}
+
+model PermintaanInventoryDetail {
+  id                      String   @id @default(uuid())
+  qty                     Int
+  inventory_master_id     String
+  permintaan_inventory_id String
+  createdAt               DateTime @default(now())
+  updatedAt               DateTime @updatedAt
+
+  inventory_master     MasterInventory     @relation(fields: [inventory_master_id], references: [id], onDelete: Cascade)
+  permintaan_inventory PermintaanInventory @relation(fields: [permintaan_inventory_id], references: [id], onDelete: Cascade)
+}
+
+model PengirimanBarang {
+  id            String   @id @default(uuid())
+  status        String   @db.VarChar(50)
+  desc          String
+  outlite_id    String
+  permintaan_id String
+  dikirim_oleh  String
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  outlite                Outlite                  @relation(fields: [outlite_id], references: [id], onDelete: Cascade)
+  permintaan             PermintaanInventory      @relation(fields: [permintaan_id], references: [id], onDelete: Cascade)
+  dikirimOleh            User                     @relation(fields: [dikirim_oleh], references: [id], onDelete: Cascade)
+  PengirimanBarangDetail PengirimanBarangDetail[]
+
+  @@map("pengiriman_barang")
+}
+
+model PengirimanBarangDetail {
+  id            String   @id @default(uuid())
+  nama_barang   String   @db.VarChar(100)
+  qty           Int
+  pengiriman_id String
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  pengiriman PengirimanBarang @relation(fields: [pengiriman_id], references: [id], onDelete: Cascade)
+
+  @@map("pengiriman_barang_detail")
+}
+
+model Mitra {
+  id           String         @id @default(uuid())
+  kode_mitra   String         @unique @db.VarChar(100)
+  nama         String         @db.VarChar(100)
+  telepon      String         @db.VarChar(50)
+  alamat       String         @db.VarChar(255)
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+  MitraBelanja MitraBelanja[]
+}
+
+enum metode_pembayaran {
+  tunai
+  transfer
+  midtrans
+  xendit
+}
+
+enum status_pembayaran {
+  pending
+  paid
+  failed
+  expired
+  refunded
+}
+
+model MitraBelanja {
+  id             String            @id @default(uuid())
+  metode_pay     metode_pembayaran
+  payment_status status_pembayaran
+  grand_total    Decimal           @db.Decimal(10, 2)
+  amount_paid    Decimal           @db.Decimal(10, 2)
+  refund         Decimal           @db.Decimal(10, 2)
+  order_code     String            @db.VarChar(255)
+  note           Json
+  mitra_id       String
+  user_id        String
+  createdAt      DateTime          @default(now())
+  updatedAt      DateTime          @updatedAt
+
+  mitra              Mitra                @relation(fields: [mitra_id], references: [id], onDelete: Cascade)
+  user               User                 @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  DetailMitraBelanja DetailMitraBelanja[]
+
+  @@map("mitra_belanja")
+}
+
+model DetailMitraBelanja {
+  id                  String   @id @default(uuid())
+  qty                 Int
+  harga               Decimal  @db.Decimal(10, 2)
+  Subtotal            Decimal  @db.Decimal(10, 2)
+  belanja_mitra_id    String
+  master_inventory_id String
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  belanjaMitra    MitraBelanja    @relation(fields: [belanja_mitra_id], references: [id], onDelete: Cascade)
+  masterInventory MasterInventory @relation(fields: [master_inventory_id], references: [id], onDelete: Cascade)
+
+  @@map("detail_mitra_belanja")
+}
+
+enum hari {
+  senin
+  selasa
+  rabu
+  kamis
+  jumat
+  sabtu
+  minggu
+}
+
+model Diskon {
+  id        String   @id @default(uuid())
+  name      String   @db.VarChar(100)
+  hari      hari
+  diskon    Decimal  @db.Decimal(10, 2)
+  menu_id   String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  menu      Menu     @relation(fields: [menu_id], references: [id], onDelete: Cascade)
+
+  @@map("diskon")
+}
+
+enum TipeTransaksi {
+  pemasukan
+  pengeluaran
+}
+
+model Keuangan {
+  id         String        @id @default(uuid())
+  nama       String        @db.VarChar(100)
+  jumlah     Decimal       @db.Decimal(10, 2)
+  tipe       TipeTransaksi
+  keterangan String        @db.VarChar(255)
+  sumber     String        @db.VarChar(100)
+  tanggal    DateTime
+  ref_id     String
+  createdAt  DateTime      @default(now())
+  updatedAt  DateTime      @updatedAt
+  Galery     Galery[]
+
+  @@map("keuangan")
+}

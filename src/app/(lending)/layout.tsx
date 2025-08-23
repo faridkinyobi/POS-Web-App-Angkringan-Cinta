@@ -1,5 +1,5 @@
-import Footer from "@/components/lending/Footer";
-import NavbarLending from "@/components/lending/NavbarLending";
+import Footer from "@/components/lending/organisms/Footer";
+import NavbarLending from "@/components/lending/organisms/NavbarLending";
 import React from "react";
 
 export default function layoutLending({
