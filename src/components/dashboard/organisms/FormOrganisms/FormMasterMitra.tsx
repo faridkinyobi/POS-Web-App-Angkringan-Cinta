@@ -30,6 +30,7 @@ export default function FormMasterMitra({ id = "" }: { id?: string }) {
 	const { close } = useFormModalStore();
 
 	const { data } = useGetByIdMasterMitra(id);
+	// data form mitra
 	const defaultValues = React.useMemo(
 		() => ({
 			nama: "",
@@ -39,7 +40,6 @@ export default function FormMasterMitra({ id = "" }: { id?: string }) {
 		}),
 		[]
 	);
-
 	const form = useForm<IzMasterMitra>({
 		resolver: zodResolver(SchemaMasterMitra) as any,
 		mode: "onTouched",
@@ -47,17 +47,17 @@ export default function FormMasterMitra({ id = "" }: { id?: string }) {
 	});
 	const { control, handleSubmit, reset } = form;
 
+	// reset form data value
 	React.useEffect(() => {
 		if (!data) return;
 		const formValues = {
 			...defaultValues,
 			...data,
 		};
-
-		// console.log("Reset values:", formValues);
 		reset(formValues);
 	}, [reset, data, defaultValues]);
 
+	// generate kode mitra random
 	const watchNama = form
 		.watch("nama")
 		.trim()
@@ -66,22 +66,19 @@ export default function FormMasterMitra({ id = "" }: { id?: string }) {
 		.toUpperCase();
 	const watchTelp = form.watch("telepon").slice(8);
 	const randomNum = Math.floor(1000 + Math.random() * 9000);
-
 	React.useEffect(() => {
 		if (watchNama && watchTelp && randomNum) {
 			form.setValue("kode_mitra", `${watchNama}${randomNum}${watchTelp}`);
 		}
 	}, [watchNama, watchTelp, form, randomNum]);
 
-	// QUERY
+	// QUERY mutation
 	const { mutate: AddData, isPending } = useAddMasterMitra();
 	const { mutate: EditData } = useEditMasterMitra();
 
-	// console.log(typeof getValues("harga_beli"));
+	// hande submit
 	const onSubmit = (data: IzMasterMitra) => {
-		console.log(data);
 		if (id) {
-			// console.log(data);
 			EditData({ id: id, data: data });
 			close();
 		} else {
