@@ -8,13 +8,12 @@ import {
 	AlertDialogCancel,
 	AlertDialogFooter,
 } from "@/components/ui/alert-dialog";
-import { useAlertModalStore } from "@/stores";
-
-import { useRouter } from "next/navigation";
-import { fetchMasterInventoryId } from "@/actions";
+import { useAlertModalStore, useFormModalStore } from "@/stores";
+import { fetchMasterMitraId } from "@/actions";
 import { Pencil, Trash2 } from "lucide-react";
 import { useDeleteMasterMitra } from "@/features";
 import { queryClient } from "@/lib/queryClient";
+import { FormMasterMitra } from "../FormOrganisms";
 
 type Props = {
 	data: IzMasterInventory[];
@@ -23,10 +22,10 @@ type Props = {
 
 export default function TablelMasterMitra({ data, isLoading }: Props) {
 	const { open } = useAlertModalStore();
-	const router = useRouter();
-
+	const { open: openModelForm } = useFormModalStore()
 	const { mutate } = useDeleteMasterMitra();
 
+	// delete data
 	const handleDelete = useCallback(
 		(id: string) => {
 			mutate(id);
@@ -34,10 +33,11 @@ export default function TablelMasterMitra({ data, isLoading }: Props) {
 		[mutate]
 	);
 
+	//open model delete data mitra
 	const handleOpenModal = useCallback(
 		(id: string) => {
 			open({
-				title: "Delet Data Master Inventory",
+				title: "Delet Data Master Mitra",
 				desc: "This partner data deletion is permanent and cannot be undone. All related content will be deleted.?",
 				size: "sm",
 				children: (
@@ -59,18 +59,18 @@ export default function TablelMasterMitra({ data, isLoading }: Props) {
 		[open, handleDelete]
 	);
 
-	const handleEdit = useCallback(
-		async (id: string) => {
-			router.push(`/dashboard/master-inventory/${id}`);
-		},
-		[router]
-	);
+	// edit data mitra open model
+	const handleEdit = useCallback((id: string) => {
+		openModelForm({ title: "Edit", children: <FormMasterMitra id={id} /> });
+		document.body.style.pointerEvents = "auto";
+	}, [openModelForm]);
 
+	// Prefetch data on hover
 	const handleMoseEnter = useCallback(async (id: string) => {
 		await queryClient.prefetchQuery({
 			queryKey: ["master-mitra-cache", id],
 			queryFn: async () => {
-				const res = await fetchMasterInventoryId(id);
+				const res = await fetchMasterMitraId(id);
 				return res.data;
 			},
 			staleTime: 1000 * 60, // 1 menit,
@@ -106,7 +106,7 @@ export default function TablelMasterMitra({ data, isLoading }: Props) {
 				{
 					name: "Aksi",
 					indexData: "Aksi",
-					render(row, i, item) {
+					render(_value, _index, item) {
 						// console.log("render args:", { row, i, item });
 						if (!item?.id) return null;
 						return (
@@ -116,7 +116,7 @@ export default function TablelMasterMitra({ data, isLoading }: Props) {
 										label: "Edit",
 										variant: "primary",
 										onClick: () => handleEdit(item.id),
-										onMoseEnter: () => handleMoseEnter(item.id),
+										onMouseEnter: () => handleMoseEnter(item.id),
 										icons: Pencil,
 									},
 									{
