@@ -14,14 +14,15 @@ import { useFormModalStore } from "@/stores";
 
 export default function Page() {
 	const { open } = useFormModalStore();
-	// const router = useRouter();
+
+	// add data mitra open model
 	const hanldeOpenFormMobel = useCallback(() => {
 		open({ title: "open", children: <FormMasterMitra /> });
 	}, [open]);
 
 	// Fetch Data
 	const { data, isLoading, isError, refetch } = useGetMasterMitra();
-	// console.log(data, "page");
+
 	if (isError) return <ErrorState onRetry={() => refetch()} />;
 
 	return (
