@@ -2,9 +2,34 @@ import { prisma } from "@/lib/prisma";
 import { IzMasterInventory, SchemaQueryParams } from "@/schema";
 import { IQueryParams } from "@/types";
 import { Prisma } from "@prisma/client";
+
 export const Create = async (data: Prisma.MasterInventoryCreateInput) => {
+	const stockDecimal = new Prisma.Decimal(Number(data.stock));
+	const hargaBeli = new Prisma.Decimal(Number(data.harga_beli));
+	const hargaJual = new Prisma.Decimal(Number(data.harga_jual));
+
 	return await prisma.masterInventory.create({
-		data,
+		data: {
+			kode_barang: data.kode_barang,
+			name: data.name,
+			stock: data.stock,
+			satuan: data.satuan,
+			katagory: data.katagory,
+			harga_beli: data.harga_beli,
+			harga_jual: data.harga_jual,
+			LaporanInventory: {
+				create: {
+					stock_awal: 0,
+					stock_masuk: data.stock,
+					stock_keluar: 0,
+					stock_akhir: data.stock,
+					status: "INIT",
+					nilai_pembelian: stockDecimal.mul(hargaBeli),
+					nilai_penjualan: stockDecimal.mul(hargaJual),
+					laba: stockDecimal.mul(hargaJual).minus(stockDecimal.mul(hargaBeli)),
+				}
+			}
+		}
 	});
 };
 
@@ -24,6 +49,7 @@ export const Get = async (query: IQueryParams) => {
 			katagory: true,
 			harga_jual: true,
 			harga_beli: true,
+			kode_barang: true,
 		},
 		where: {
 			OR: [
@@ -37,15 +63,23 @@ export const Get = async (query: IQueryParams) => {
 					: []),
 			],
 		},
+		orderBy: {
+			createdAt: 'asc'
+		},
 		skip: (Number(parsed.page) - 1) * Number(parsed.perPage),
 		take: Number(parsed.perPage),
 	});
 };
 export const count = async () => await prisma.masterInventory.count();
 
-export const getByName = async (name: string) => {
+export const getBykeyword = async (keyword: string) => {
 	return await prisma.masterInventory.findFirst({
-		where: { name },
+		where: {
+			OR: [
+				{ name: { equals: keyword, mode: "insensitive" } },
+				{ kode_barang: { equals: keyword, mode: "insensitive" } }
+			]
+		},
 	});
 };
 export const Delete = async (id: string) => {

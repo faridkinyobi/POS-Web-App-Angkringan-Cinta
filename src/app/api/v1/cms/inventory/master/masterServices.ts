@@ -5,12 +5,20 @@ import { ERROR_CODE, IQueryParams } from "@/types";
 
 export const Creat = async (body: IzMasterInventory) => {
 
-	const checkName = await useRepository.getByName(body.name);
-	if (checkName)
+	const checkName = await useRepository.getBykeyword(body.name);
+	if (checkName) {
 		throw new AppError(
 			ERROR_CODE.ALREADY_EXISTS.code,
-			"Resource already exists"
+			"The name already exists"
 		);
+	}
+	const checkKode = await useRepository.getBykeyword(body.kode_barang);
+	if (checkKode) {
+		throw new AppError(
+			ERROR_CODE.ALREADY_EXISTS.code,
+			"The item code already exists"
+		);
+	}
 
 	const result = await useRepository.Create(body);
 	if (!result) {
@@ -38,12 +46,13 @@ export const Delet = async (id: string) => {
 		throw new AppError(ERROR_CODE.BAD_REQUEST.code, "ID is required");
 	}
 	const checkData = await useRepository.GetById(id);
+
 	if (!checkData) {
 		throw new AppError(ERROR_CODE.NOT_FOUND.code, "Data not found");
 	}
+	console.log(checkData)
 
 	const result = await useRepository.Delete(id);
-
 	if (!result) {
 		throw new AppError(
 			ERROR_CODE.INTERNAL_SERVER_ERROR.code,

@@ -18,8 +18,10 @@ export async function POST(req: NextRequest) {
 		await validateRequest(SchemaMasterInventory, body);
 
 		await useServices.Creat(body);
+
 		// Hapus / invalidasi cache
 		await revalidateTag("master-inventory-cache");
+		await revalidateTag("laporan-blanja-cache");
 
 		return NextResponse.json({ message: "success" }, { status: 200 });
 	} catch (error) {
