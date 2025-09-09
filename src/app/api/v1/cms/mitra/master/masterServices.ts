@@ -31,7 +31,6 @@ export const GetAll = async (query: IQueryParams) => {
 		await useRepository.Get(query),
 		await useRepository.count(),
 	]);
-	// console.log(data);
 	return { data, total, page, perPage };
 };
 
