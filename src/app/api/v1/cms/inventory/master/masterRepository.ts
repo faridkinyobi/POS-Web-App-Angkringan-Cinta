@@ -36,6 +36,11 @@ export const Create = async (data: Prisma.MasterInventoryCreateInput) => {
 export const Get = async (query: IQueryParams) => {
 	const { search = "" } = query;
 	const parsed = SchemaQueryParams.parse(query);
+
+	// default aman
+	const page = Number(parsed.page) > 0 ? Number(parsed.page) : 1;
+	const perPage = Number(parsed.perPage) > 0 ? Number(parsed.perPage) : 10;
+
 	const trimmedSearch = search.trim();
 	const numericSearch = parseFloat(trimmedSearch);
 	const isNumber = !isNaN(numericSearch);
@@ -63,13 +68,12 @@ export const Get = async (query: IQueryParams) => {
 					: []),
 			],
 		},
-		orderBy: {
-			createdAt: 'asc'
-		},
-		skip: (Number(parsed.page) - 1) * Number(parsed.perPage),
-		take: Number(parsed.perPage),
+		orderBy: { createdAt: "asc" },
+		skip: (page - 1) * perPage,
+		take: perPage,
 	});
 };
+
 export const count = async () => await prisma.masterInventory.count();
 
 export const getBykeyword = async (keyword: string) => {
