@@ -15,6 +15,9 @@ export const Get = async (query: IQueryParams) => {
 	const parsed = SchemaQueryParams.parse(query);
 	const trimmedSearch = search.trim();
 
+	const page = Number(parsed.page) > 0 ? Number(parsed.page) : 1;
+	const perPage = Number(parsed.perPage) > 0 ? Number(parsed.perPage) : 10;
+
 	return await prisma.mitra.findMany({
 		select: {
 			id: true,
@@ -30,8 +33,8 @@ export const Get = async (query: IQueryParams) => {
 				{ kode_mitra: { contains: trimmedSearch, mode: "insensitive" } },
 			],
 		},
-		skip: (Number(parsed.page) - 1) * Number(parsed.perPage),
-		take: Number(parsed.perPage),
+		skip: (page - 1) * perPage,
+		take: perPage,
 	});
 };
 export const count = async () => await prisma.mitra.count();
