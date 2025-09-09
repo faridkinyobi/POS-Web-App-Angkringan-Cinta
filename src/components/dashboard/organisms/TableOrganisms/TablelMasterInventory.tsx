@@ -1,5 +1,5 @@
 "use client";
-import { IzMasterInventory } from "@/schema";
+import { IzMasterInventory, IzStatusEnumInventory } from "@/schema";
 import React, { useCallback } from "react";
 import DataTable from "../../molecules/DataTable";
 import ActionDropdown from "../../molecules/ActionDropdown";
@@ -8,14 +8,15 @@ import {
 	AlertDialogCancel,
 	AlertDialogFooter,
 } from "@/components/ui/alert-dialog";
-import { useAlertModalStore } from "@/stores";
+import { useAlertModalStore, useFormModalStore } from "@/stores";
 
 import { FormatRupiah } from "@/utils/formatRupiah";
 import { useRouter } from "next/navigation";
 import { fetchMasterInventoryId } from "@/actions";
-import { Pencil, Trash2 } from "lucide-react";
+import { FileMinus2, FilePlus2, Pencil, Trash2 } from "lucide-react";
 import { useDeletMasterInventory } from "@/features";
 import { queryClient } from "@/lib/queryClient";
+import { FormInOutInventory } from "../FormOrganisms";
 
 type Props = {
 	data: IzMasterInventory[];
@@ -24,10 +25,10 @@ type Props = {
 
 export default function TablelMasterInventory({ data, isLoading }: Props) {
 	const { open } = useAlertModalStore();
+	const { open: OpenDataInventoryOut } = useFormModalStore()
 	const router = useRouter();
 
 	const { mutate } = useDeletMasterInventory();
-
 	const handleDelete = useCallback(
 		(id: string) => {
 			mutate(id);
@@ -35,6 +36,7 @@ export default function TablelMasterInventory({ data, isLoading }: Props) {
 		[mutate]
 	);
 
+	//open model delete data mitra
 	const handleOpenModal = useCallback(
 		(id: string) => {
 			open({
@@ -60,6 +62,7 @@ export default function TablelMasterInventory({ data, isLoading }: Props) {
 		[open, handleDelete]
 	);
 
+	// router push edit
 	const handleEdit = useCallback(
 		async (id: string) => {
 			router.push(`/dashboard/master-inventory/${id}`);
@@ -67,6 +70,7 @@ export default function TablelMasterInventory({ data, isLoading }: Props) {
 		[router]
 	);
 
+	// Prefetch data on hover
 	const handleMoseEnter = useCallback(async (id: string) => {
 		await queryClient.prefetchQuery({
 			queryKey: ["master-inventory-cache", id],
@@ -78,6 +82,14 @@ export default function TablelMasterInventory({ data, isLoading }: Props) {
 		});
 	}, []);
 
+	const handleInventoryOutIn = useCallback(async (id: string, status: IzStatusEnumInventory) => {
+		OpenDataInventoryOut({
+			title: `Inventory ${status}`,
+			children: <FormInOutInventory id={id} statusType={status} />
+		})
+		document.body.style.pointerEvents = "auto";
+	}, [OpenDataInventoryOut])
+
 	return (
 		<DataTable
 			isLoading={!isLoading}
@@ -87,6 +99,10 @@ export default function TablelMasterInventory({ data, isLoading }: Props) {
 					name: "no",
 					indexData: "no",
 					render: (_, i = 0) => 1 + i,
+				},
+				{
+					name: "kode_barang",
+					indexData: "kode_barang",
 				},
 				{
 					name: "Name",
@@ -101,28 +117,27 @@ export default function TablelMasterInventory({ data, isLoading }: Props) {
 					indexData: "katagory",
 				},
 				{
-					name: "Stok Tersedia",
+					name: "Stok tersedia",
 					indexData: "stock",
 				},
 				{
 					name: "Harga beli",
 					indexData: "harga_beli",
-					render(row, i, items) {
+					render(_value, _index, items) {
 						return FormatRupiah(items.harga_beli);
 					},
 				},
 				{
 					name: "Harga jual",
 					indexData: "harga_jual",
-					render(row, i, items) {
+					render(_value, _index, items) {
 						return FormatRupiah(items.harga_jual);
 					},
 				},
 				{
 					name: "Aksi",
 					indexData: "Aksi",
-					render(row, i, items) {
-						// console.log("render args:", { row, i, item });
+					render(_value, _index, items) {
 						if (!items?.id) return null;
 						return (
 							<ActionDropdown
@@ -131,15 +146,29 @@ export default function TablelMasterInventory({ data, isLoading }: Props) {
 										label: "Edit",
 										variant: "primary",
 										onClick: () => handleEdit(items.id),
-										onMoseEnter: () => handleMoseEnter(items.id),
+										onMouseEnter: () => handleMoseEnter(items.id),
 										icons: Pencil,
+									},
+									{
+										label: "OUT",
+										variant: "ghost",
+										onClick: () => handleInventoryOutIn(items.id, "OUT"),
+										onMouseEnter: () => handleMoseEnter(items.id),
+										icons: FileMinus2,
+									},
+									{
+										label: "IN",
+										variant: "secondary",
+										onClick: () => handleInventoryOutIn(items.id, "IN"),
+										onMouseEnter: () => handleMoseEnter(items.id),
+										icons: FilePlus2,
 									},
 									{
 										label: "Delete",
 										separatorBefore: true,
 										variant: "destructive",
 										onClick: () => handleOpenModal(items.id),
-										onMoseEnter: () => handleMoseEnter(items.id),
+										onMouseEnter: () => handleMoseEnter(items.id),
 										icons: Trash2,
 									},
 								]}
