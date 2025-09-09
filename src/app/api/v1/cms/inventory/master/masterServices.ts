@@ -37,7 +37,7 @@ export const GetAll = async (query: IQueryParams) => {
 		await useRepository.Get(query),
 		await useRepository.count(),
 	]);
-	// console.log(data);
+
 	return { data, total, page, perPage };
 };
 
@@ -50,7 +50,6 @@ export const Delet = async (id: string) => {
 	if (!checkData) {
 		throw new AppError(ERROR_CODE.NOT_FOUND.code, "Data not found");
 	}
-	console.log(checkData)
 
 	const result = await useRepository.Delete(id);
 	if (!result) {
