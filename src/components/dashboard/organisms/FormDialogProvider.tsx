@@ -23,7 +23,14 @@ export default function FormDialogProvider() {
 		sizeClass[props?.size as keyof typeof sizeClass] ?? "max-w-sm";
 	return (
 		<Dialog open={isOpen} onOpenChange={close}>
-			<DialogContent className={cn(dialogSize)}>
+			<DialogContent
+				className={cn(
+					dialogSize,
+					"max-h-[80vh] overflow-y-auto scroll-hidden",
+					props?.className
+				)}
+				aria-describedby={undefined}
+			>
 				<DialogHeader>
 					<DialogTitle>{props?.title}</DialogTitle>
 				</DialogHeader>
