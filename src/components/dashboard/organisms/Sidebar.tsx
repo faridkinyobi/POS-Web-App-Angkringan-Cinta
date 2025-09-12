@@ -1,6 +1,5 @@
 "use client";
 import Image from "next/image";
-import Link from "next/link";
 import React from "react";
 import {
 	Sidebar,
@@ -16,20 +15,13 @@ export default function SidebarMain({
 	return (
 		<Sidebar collapsible="icon" {...props}>
 			<SidebarHeader>
-				<Link
-					href="/dashboard"
-					aria-label="dashboard"
-					className="border-none outline-0 focus-visible:ring-2"
-				>
-					<Image
-						src="/logo.png"
-						width={86}
-						height={54}
-						alt="Logo Angkringan Cinta"
-						priority
-						className="h-auto w-auto"
-					/>
-				</Link>
+				<Image
+					src="/logo.png"
+					width={90}
+					height={60}
+					alt="Logo Angkringan Cinta"
+					className="h-auto w-auto"
+				/>
 			</SidebarHeader>
 			<SidebarContent>
 				<SidebarMenuList Items={menuSidebar} />
