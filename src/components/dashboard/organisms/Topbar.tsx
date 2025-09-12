@@ -48,7 +48,7 @@ export default function Topbar() {
 					<AlertDialogCancel className="cursor-pointer">
 						Cancel
 					</AlertDialogCancel>
-					<AlertDialogAction onClick={hanldeLogout} className="cursor-pointer">
+					<AlertDialogAction onClick={handleLogout} className="cursor-pointer">
 						Logout
 					</AlertDialogAction>
 				</AlertDialogFooter>
@@ -56,10 +56,10 @@ export default function Topbar() {
 		});
 	};
 
-	const hanldeLogout = async () => {
+	const handleLogout = async () => {
+		router.push("/pos-angkringan-cinta");
 		await AxiosInstance.post("/auth/logout");
 		localStorage.clear();
-		router.push("/pos-angkringan-cinta");
 	};
 	return (
 		<header className="px-[24px] py-2 bg-background-secondary flex justify-between items-center">
@@ -70,13 +70,13 @@ export default function Topbar() {
 			</div>
 			<div className="flex space-x-1 md:space-x-5 items-center">
 				<div className="relative">
+					<BellRing className="hover:rotate-12 w-6 h-6" />
 					<Badge
 						asChild
-						className="h-5 min-w-5 rounded-full px-1 font-mono tabular-nums absolute -inset-2.5"
+						className="h-5 min-w-5 rounded-full px-1 absolute -top-1 -right-1"
 					>
 						<Link href="/">8</Link>
 					</Badge>
-					<BellRing className=" hover:rotate-12" />
 				</div>
 
 				<DropdownMenu>
